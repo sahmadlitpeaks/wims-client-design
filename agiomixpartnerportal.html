@@ -1,0 +1,690 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Agiomix Partner Portal — Prototype Replica</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  body{font-family:'Figtree',ui-sans-serif,system-ui,sans-serif}
+  .scroll-thin::-webkit-scrollbar{width:8px;height:8px}
+  .scroll-thin::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:8px}
+  /* sidebar (matches app: #0B1730 navy) */
+  .side-item{display:block;border-radius:.5rem;padding:.5rem .75rem;font-size:.875rem;font-weight:500;color:#fff;cursor:pointer}
+  .side-item:hover{background:#162543}
+  .side-active{background:#1F2F4D;box-shadow:inset 2px 0 0 0 #6FA8FF}
+  .side-cat{padding:.9rem .75rem .5rem;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.14em;color:#8DA3C4}
+  .inp{display:block;width:100%;border:1px solid #e2e8f0;border-radius:.5rem;padding:.5rem .75rem;font-size:.875rem;color:#1e293b;background:#fff}
+  .inp:focus{outline:none;border-color:#0ea5e9;box-shadow:0 0 0 1px #0ea5e9}
+  .lbl{display:block;font-size:.8rem;font-weight:500;color:#334155;margin-bottom:.35rem}
+  .modal{position:fixed;inset:0;background:rgba(15,23,42,.5);display:flex;align-items:center;justify-content:center;padding:1rem;z-index:50}
+  .modal-card{background:#fff;border-radius:1rem;padding:1.5rem;width:100%;max-width:34rem;box-shadow:0 20px 40px rgba(0,0,0,.2);max-height:90vh;overflow:auto}
+  .btn-primary{padding:.5rem 1rem;border-radius:.5rem;font-size:.875rem;font-weight:600;background:#7c3aed;color:#fff}
+  .btn-primary:hover{background:#6d28d9}
+  .btn-ghost{padding:.5rem 1rem;border-radius:.5rem;font-size:.875rem;border:1px solid #cbd5e1;color:#475569;background:#fff}
+  .badge{font-size:.72rem;font-weight:600;padding:.2rem .6rem;border-radius:9999px;white-space:nowrap}
+</style>
+</head>
+<body class="bg-slate-100 text-slate-800">
+<!--
+  STANDALONE PROTOTYPE — replica of the Agiomix Partner (B2B) portal with dummy data.
+  Faithful to the live screens (sidebar, dashboard, quick access, specialty reports).
+  The ONLY functional change vs production is the NEW sample-registration flow:
+    Step 1 Sample details · Step 2 Patient details (incl. referring doctor) · Step 3 Tests + submit
+    → if a selected test needs a TRF, the TRF screen follows submit (not a numbered step).
+  Tailwind CDN + vanilla JS. No backend.
+-->
+
+<div class="min-h-screen flex">
+  <!-- ============== SIDEBAR ============== -->
+  <aside class="w-64 shrink-0 hidden md:flex md:flex-col" style="background:#0B1730;border-right:1px solid #203152">
+    <div class="px-5 pt-6 pb-4">
+      <div class="flex items-center gap-2">
+        <div class="w-9 h-9 rounded-lg bg-white flex items-center justify-center shrink-0">
+          <span class="text-sky-600 font-extrabold text-lg">α</span>
+        </div>
+        <div>
+          <div class="text-white font-extrabold text-xl leading-none tracking-tight">Agiomix<span class="text-amber-400">.</span></div>
+          <div class="text-[8px] uppercase tracking-[0.2em] text-sky-300/70 mt-0.5">next generation diagnostics</div>
+        </div>
+      </div>
+    </div>
+    <nav class="flex-1 overflow-y-auto px-3 pb-3 scroll-thin">
+      <div class="side-item" data-nav="dashboard">Dashboard</div>
+      <div class="side-cat">Laboratory Operations</div>
+      <div class="side-item" data-nav="quick">Quick Access</div>
+      <div class="side-item" data-nav="staff">Add staff</div>
+      <div class="side-item" data-nav="specialty">Samples</div>
+      <div class="side-cat">Support</div>
+      <div class="side-item" data-nav="tickets">Tickets</div>
+      <div class="side-item" data-nav="chat">Chat</div>
+      <div class="side-cat">Profile</div>
+      <div class="side-item" data-nav="users">Users</div>
+      <div class="side-item" data-nav="roles">Roles</div>
+      <div class="side-item" data-nav="privacy">Privacy</div>
+      <div class="side-item" data-nav="password">Password reset</div>
+      <div class="side-item" data-nav="disable">Disable users</div>
+    </nav>
+    <div class="px-5 py-4">
+      <button class="text-slate-500 hover:text-slate-300"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M4 4h2v16H4zM20 12l-8-7v4H7v6h5v4z"/></svg></button>
+    </div>
+  </aside>
+
+  <!-- ============== MAIN ============== -->
+  <div class="flex-1 flex flex-col min-w-0">
+    <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-5">
+      <div class="flex items-center gap-3">
+        <button id="backBtnTop" class="hidden items-center gap-1.5 text-slate-500 hover:text-slate-700 text-sm font-medium" onclick="go('dashboard')">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12"/></svg> Back
+        </button>
+        <h2 id="pageTitle" class="font-bold text-xl text-slate-800">Dashboard</h2>
+      </div>
+      <div class="flex items-center gap-3">
+        <span class="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-500"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg></span>
+        <span class="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-500"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg></span>
+        <span class="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-500"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg></span>
+        <div class="w-px h-6 bg-slate-200"></div>
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-full bg-gradient-to-br from-sky-500 to-indigo-600 flex items-center justify-center text-white"><svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
+          <span class="text-sm font-semibold text-slate-700">Test Organization</span>
+          <svg class="w-4 h-4 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+        </div>
+      </div>
+    </header>
+
+    <main class="flex-1 overflow-y-auto scroll-thin">
+
+      <!-- ============================================================= -->
+      <!-- DASHBOARD                                                     -->
+      <!-- ============================================================= -->
+      <section data-view="dashboard">
+        <div class="px-4 sm:px-6 lg:px-8 py-8 w-full max-w-7xl mx-auto bg-gradient-to-b from-sky-50/40 to-transparent rounded-[16px]">
+          <!-- welcome banner -->
+          <div class="relative overflow-hidden rounded-3xl mb-8 bg-gradient-to-br from-sky-100 via-teal-50 to-white border border-white px-6 py-7 sm:px-8 sm:py-8">
+            <div class="pointer-events-none absolute -top-16 -right-12 w-64 h-64 rounded-full bg-teal-200/40 blur-3xl"></div>
+            <div class="pointer-events-none absolute -bottom-16 left-32 w-56 h-56 rounded-full bg-sky-200/40 blur-3xl"></div>
+            <div class="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
+              <div class="flex items-center gap-4">
+                <div class="w-14 h-14 rounded-2xl bg-white/80 shadow-sm flex items-center justify-center text-sky-600 font-bold text-lg">TO</div>
+                <div>
+                  <p class="text-xs text-sky-700/80 font-medium tracking-wide uppercase">Sunday, May 24, 2026</p>
+                  <h1 class="text-2xl sm:text-3xl font-bold text-slate-800 mt-1">Good afternoon, Test Organization</h1>
+                  <p class="text-slate-600 mt-1 text-sm">Welcome back to <span class="font-semibold text-slate-800">Test Organization</span>.</p>
+                </div>
+              </div>
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/70 border border-white/80"><span class="w-2 h-2 rounded-full bg-sky-400"></span><span class="text-xs text-slate-500">Received today</span><span class="text-sm font-semibold text-slate-800">0</span></span>
+                <span class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/70 border border-white/80"><span class="w-2 h-2 rounded-full bg-teal-400"></span><span class="text-xs text-slate-500">Released today</span><span class="text-sm font-semibold text-slate-800">0</span></span>
+                <span class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/70 border border-white/80"><span class="w-2 h-2 rounded-full bg-amber-400"></span><span class="text-xs text-slate-500">In progress</span><span class="text-sm font-semibold text-slate-800">188</span></span>
+                <span class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/70 border border-white/80"><span class="w-2 h-2 rounded-full bg-rose-400"></span><span class="text-xs text-slate-500">Overdue</span><span class="text-sm font-semibold text-slate-800">0</span></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- quick actions -->
+          <section class="rounded-3xl border border-slate-200/70 bg-white/50 backdrop-blur-sm p-5 sm:p-6 mb-6">
+            <div class="flex items-center gap-3 mb-5">
+              <span class="w-1.5 h-9 rounded-full bg-gradient-to-b from-sky-400 to-teal-400"></span>
+              <div><h2 class="text-lg font-semibold text-slate-800">Quick actions</h2><p class="text-sm text-slate-500">Jump straight to what you need</p></div>
+            </div>
+            <div id="dashActions" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+          </section>
+
+          <!-- statistics -->
+          <section class="rounded-3xl border border-slate-200/70 bg-white/50 backdrop-blur-sm p-5 sm:p-6 mb-6">
+            <div class="flex items-center gap-3 mb-5">
+              <span class="w-1.5 h-9 rounded-full bg-gradient-to-b from-amber-400 to-rose-400"></span>
+              <div><h2 class="text-lg font-semibold text-slate-800">Statistics</h2><p class="text-sm text-slate-500">Overview for Test Organization</p></div>
+            </div>
+            <div id="dashStats" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
+          </section>
+
+          <!-- support -->
+          <section class="rounded-3xl border border-slate-200/70 bg-white/50 backdrop-blur-sm p-5 sm:p-6 mb-6">
+            <div class="flex items-center gap-3 mb-5">
+              <span class="w-1.5 h-9 rounded-full bg-gradient-to-b from-orange-400 to-rose-400"></span>
+              <div><h2 class="text-lg font-semibold text-slate-800">Support</h2><p class="text-sm text-slate-500">Get help from our team</p></div>
+            </div>
+            <div id="dashSupport" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+          </section>
+
+          <!-- latest samples -->
+          <section class="rounded-3xl border border-slate-200/70 bg-white/50 backdrop-blur-sm p-5 sm:p-6">
+            <div class="flex items-center justify-between gap-3 mb-5">
+              <div class="flex items-center gap-3">
+                <span class="w-1.5 h-9 rounded-full bg-gradient-to-b from-fuchsia-400 to-pink-400"></span>
+                <div><h2 class="text-lg font-semibold text-slate-800">Latest samples</h2><p class="text-sm text-slate-500">Your most recent submissions</p></div>
+              </div>
+              <a class="text-sm font-medium text-sky-600 hover:text-sky-700 cursor-pointer" onclick="go('specialty')">View all →</a>
+            </div>
+            <div class="rounded-2xl bg-white overflow-hidden"><ul id="dashLatest" class="divide-y divide-slate-100"></ul></div>
+          </section>
+        </div>
+      </section>
+
+      <!-- ============================================================= -->
+      <!-- QUICK ACCESS                                                  -->
+      <!-- ============================================================= -->
+      <section data-view="quick" class="hidden">
+        <div class="px-4 sm:px-6 lg:px-8 py-6 w-full max-w-7xl mx-auto bg-gradient-to-b from-sky-50/40 to-transparent rounded-[16px]">
+          <div class="mb-5 flex items-end justify-between gap-3 flex-wrap">
+            <div>
+              <div class="text-[11px] font-semibold uppercase tracking-wider text-sky-600">Test Organization</div>
+              <h1 class="text-xl font-bold text-slate-800 mt-0.5">Quick access</h1>
+            </div>
+            <p class="text-xs text-slate-500">Jump straight where you need to go</p>
+          </div>
+          <div id="quickTiles" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+          <div class="mt-5 rounded-xl bg-white/60 border border-slate-200/70 px-4 py-2.5 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-2"><svg class="w-4 h-4 text-sky-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span class="text-xs text-slate-600">Looking for metrics, TAT and recent activity?</span></div>
+            <a class="inline-flex items-center gap-1 text-xs font-medium text-sky-700 hover:text-sky-800 cursor-pointer" onclick="go('dashboard')">Open dashboard <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg></a>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================= -->
+      <!-- SAMPLES (reports list)                                        -->
+      <!-- ============================================================= -->
+      <section data-view="specialty" class="hidden"><div class="px-4 sm:px-6 lg:px-8 py-6 w-full max-w-7xl mx-auto" id="specialtyMount"></div></section>
+
+      <!-- ============================================================= -->
+      <!-- REGISTER SAMPLE (new flow)                                    -->
+      <!-- ============================================================= -->
+      <section data-view="register" class="hidden">
+        <div class="px-4 sm:px-6 lg:px-8 py-6 w-full max-w-5xl mx-auto bg-gradient-to-b from-sky-50/40 to-transparent rounded-[16px]">
+          <div class="rounded-2xl border border-slate-200 bg-white shadow-sm p-5 mb-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div class="flex items-center gap-4 min-w-0">
+              <div class="w-12 h-12 rounded-xl flex items-center justify-center text-white shadow-sm shrink-0" style="background:linear-gradient(135deg,#38bdf8,#0ea5e9)"><svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 9h-6L8 4z"/></svg></div>
+              <div class="min-w-0"><p class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">New sample</p><h1 class="text-xl sm:text-2xl font-bold text-slate-800 mt-0.5">Register sample</h1></div>
+            </div>
+            <a class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium text-sky-700 bg-sky-50 border border-sky-200 hover:bg-sky-100 transition shrink-0 cursor-pointer" onclick="go('specialty')">View samples</a>
+          </div>
+
+          <div class="rounded-2xl border border-slate-200 bg-white shadow-sm p-4 mb-5 flex items-center gap-3 text-sm" id="stepper"></div>
+
+          <div class="rounded-xl border px-4 py-3 mb-5 flex items-start gap-3" style="background:#f0f9ff;border-color:#bae6fd">
+            <svg class="w-5 h-5 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="#0ea5e9"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <p class="text-sm font-medium" style="color:#0369a1">Scan the tube barcode once on the first step — it carries through the whole request.</p>
+          </div>
+
+          <!-- STEP 1: sample details -->
+          <section data-step="1">
+            <div class="rounded-2xl border border-slate-200 bg-white shadow-sm p-5">
+              <div class="flex items-center gap-3 mb-4"><span class="w-1.5 h-7 rounded-full bg-gradient-to-b from-amber-400 to-orange-400"></span><div><h2 class="text-sm font-semibold text-slate-800">Sample details</h2><p class="text-xs text-slate-500">Start with the sample itself.</p></div></div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="md:col-span-2"><label class="lbl">Is there a physical sample?</label>
+                  <div class="flex gap-2">
+                    <button id="physYes" class="flex-1 px-3 py-2 rounded-lg border text-sm font-medium border-sky-500 bg-sky-50 text-sky-700" onclick="setPhysical(true)">Yes — sample collected</button>
+                    <button id="physNo" class="flex-1 px-3 py-2 rounded-lg border text-sm font-medium border-slate-200 text-slate-600" onclick="setPhysical(false)">No — report / add-on only</button>
+                  </div></div>
+                <div><label class="lbl">Barcode</label><div class="flex gap-2"><input id="barcode" class="inp" placeholder="Scan or type barcode" /><button class="btn-ghost shrink-0" onclick="mockScan()">Scan</button></div></div>
+                <div><label class="lbl">Sample type *</label><select id="sampleType" class="inp"><option value="">Select sample type</option><option>Blood</option><option>Plasma</option><option>Serum</option><option>Saliva</option><option>Buccal Swab</option><option>Urine</option><option>Stool</option><option>Tissue (FFPE)</option><option>Other</option></select></div>
+                <div><label class="lbl">Collection date</label><input id="collectionDate" type="date" class="inp" /></div>
+              </div>
+            </div>
+          </section>
+
+          <!-- STEP 2: patient details (incl. referring doctor) -->
+          <section data-step="2" class="hidden">
+            <div class="rounded-2xl border border-slate-200 bg-white shadow-sm p-5">
+              <div class="flex items-center gap-3 mb-4"><span class="w-1.5 h-7 rounded-full bg-gradient-to-b from-sky-400 to-teal-400"></span><div><h2 class="text-sm font-semibold text-slate-800">Patient details</h2><p class="text-xs text-slate-500">Find the patient (or add one), and the referring doctor if there is one.</p></div></div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="md:col-span-2">
+                  <div class="flex items-center justify-between mb-1.5"><label class="lbl mb-0">Patient *</label><button class="text-xs font-medium text-sky-700 hover:text-sky-800" onclick="openModal('patientModal')">+ Add new patient</button></div>
+                  <input id="patientSearch" class="inp" placeholder="Search by name, MRN, DOB or email" oninput="filterPatients(this.value)" autocomplete="off" />
+                  <div id="patientResults" class="border border-slate-200 rounded-lg mt-1 max-h-44 overflow-y-auto hidden scroll-thin"></div>
+                  <div id="patientChosen" class="hidden mt-2 flex items-center justify-between rounded-lg bg-sky-50 border border-sky-200 px-3 py-2"><div class="text-sm"><span id="pcName" class="font-semibold"></span> <span id="pcMeta" class="text-xs text-slate-500"></span></div><button class="text-slate-400 hover:text-rose-500 text-sm" onclick="clearPatient()">✕</button></div>
+                </div>
+                <div><label class="lbl">Date of birth *</label><input id="dob" type="date" class="inp" /></div>
+                <div><label class="lbl">Gender</label><select id="gender" class="inp"><option value="">Select gender</option><option>Male</option><option>Female</option><option>Other</option></select></div>
+                <div class="md:col-span-2 pt-2 mt-1 border-t border-slate-100">
+                  <div class="flex items-center justify-between mb-1.5"><label class="lbl mb-0">Referring doctor <span class="text-xs font-normal text-slate-400">(optional)</span></label><button class="text-xs font-medium text-sky-700 hover:text-sky-800" onclick="openModal('doctorModal')">+ Add doctor</button></div>
+                  <select id="doctor" class="inp" onchange="state.doctorId=this.value"></select>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- STEP 3: tests + submit -->
+          <section data-step="3" class="hidden">
+            <div class="rounded-2xl border border-slate-200 bg-white shadow-sm p-5">
+              <div class="flex items-center gap-3 mb-4"><span class="w-1.5 h-7 rounded-full bg-gradient-to-b from-emerald-400 to-teal-400"></span><div><h2 class="text-sm font-semibold text-slate-800">Select tests</h2><p class="text-xs text-slate-500">Pick one or more tests. <span id="trfNote" class="text-amber-600 font-medium"></span></p></div></div>
+              <div id="familyChips" class="flex flex-wrap gap-2 mb-4"></div>
+              <div id="brandFamilyPicker" class="hidden mb-4">
+                <p id="brandFamilyLabel" class="text-xs text-slate-500 mb-2">Select a test family</p>
+                <div id="brandFamilyChips" class="flex flex-wrap gap-2"></div>
+              </div>
+              <div id="allTestPicker" class="mb-3">
+                <div class="flex flex-col sm:flex-row gap-2">
+                  <div class="relative flex-1 min-w-0">
+                    <input id="allTestSearch" class="inp" placeholder="Type to search tests…" autocomplete="off" oninput="filterAllTestsInput(this.value)" onblur="setTimeout(hideAllTestResults,150)" />
+                    <div id="allTestResults" class="absolute z-10 left-0 right-0 border border-slate-200 rounded-lg mt-1 max-h-52 overflow-y-auto hidden scroll-thin bg-white shadow-lg"></div>
+                  </div>
+                  <button type="button" id="catalogBtn" class="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg border border-sky-200 bg-sky-50 hover:bg-sky-100 text-sm font-medium text-sky-700 transition shrink-0" onclick="openCatalogModal()">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 9h-6L8 4z"/></svg>
+                    Browse catalog
+                  </button>
+                </div>
+                <p class="text-xs text-slate-500 mt-1.5">Type to search tests, or browse the full catalog.</p>
+              </div>
+              <input id="testSearch" class="inp mb-3 hidden" placeholder="Search tests or packages…" oninput="renderTests()" />
+              <div id="testGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 hidden"></div>
+              <div id="selectedWrap" class="mt-4 rounded-xl border border-slate-200 hidden"><div class="px-4 py-2.5 border-b border-slate-100 text-xs font-semibold text-slate-500"><span id="selCount">0</span> selected</div><div id="selectedList" class="divide-y divide-slate-100"></div></div>
+            </div>
+          </section>
+
+          <!-- TRF screen -->
+          <section data-step="trf" class="hidden">
+            <div class="rounded-2xl border border-slate-200 bg-white shadow-sm p-5">
+              <div class="flex items-center gap-3 mb-4"><span class="w-1.5 h-7 rounded-full bg-gradient-to-b from-amber-400 to-orange-400"></span><div><h2 class="text-sm font-semibold text-slate-800">Test request form (TRF)</h2><p class="text-xs text-slate-500">Some tests need a TRF. Fill the short form or upload a signed PDF.</p></div></div>
+              <div id="trfBody"></div>
+            </div>
+          </section>
+
+          <div class="mt-5 flex items-center justify-between">
+            <button id="wBackBtn" class="btn-ghost" onclick="wBack()">Back</button>
+            <button id="wNextBtn" class="btn-primary" onclick="wNext()">Continue</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================= -->
+      <!-- SIMPLE SCREENS (track / tickets / support / chat / staff)     -->
+      <!-- ============================================================= -->
+      <section data-view="simple" class="hidden">
+        <div class="px-4 sm:px-6 lg:px-8 py-10 w-full max-w-3xl mx-auto">
+          <div class="rounded-2xl border border-slate-200 bg-white shadow-sm p-10 text-center">
+            <div class="w-14 h-14 rounded-2xl bg-sky-50 text-sky-500 flex items-center justify-center mx-auto mb-4"><svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2a4 4 0 014-4h3m0 0l-3-3m3 3l-3 3"/></svg></div>
+            <h3 id="simpleTitle" class="text-lg font-semibold text-slate-800 mb-1">Screen</h3>
+            <p class="text-sm text-slate-500">This screen stays exactly as it is in production. Shown here only so navigation works in the prototype.</p>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<!-- ===== modals ===== -->
+<div id="patientModal" class="modal hidden"><div class="modal-card"><h3 class="text-lg font-semibold mb-4">Add new patient</h3>
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+    <div class="sm:col-span-2"><label class="lbl">Name *</label><input id="np_name" class="inp" /></div>
+    <div><label class="lbl">Date of birth *</label><input id="np_dob" type="date" class="inp" /></div>
+    <div><label class="lbl">Gender</label><select id="np_gender" class="inp"><option value="">Select</option><option>Male</option><option>Female</option><option>Other</option></select></div>
+    <div><label class="lbl">MRN</label><input id="np_mrn" class="inp" /></div>
+    <div><label class="lbl">Phone</label><input id="np_phone" class="inp" /></div>
+    <div class="sm:col-span-2"><label class="lbl">Email</label><input id="np_email" class="inp" /></div>
+  </div>
+  <div class="flex justify-end gap-2 mt-4"><button class="btn-ghost" onclick="closeModal('patientModal')">Cancel</button><button class="btn-primary" style="background:#0284c7" onclick="savePatient()">Save patient</button></div></div></div>
+
+<div id="doctorModal" class="modal hidden"><div class="modal-card"><h3 class="text-lg font-semibold mb-4">Add referring doctor</h3>
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+    <div class="sm:col-span-2"><label class="lbl">Name *</label><input id="nd_name" class="inp" /></div>
+    <div><label class="lbl">Speciality</label><input id="nd_spec" class="inp" /></div>
+    <div><label class="lbl">Institution</label><input id="nd_inst" class="inp" /></div>
+  </div>
+  <div class="flex justify-end gap-2 mt-4"><button class="btn-ghost" onclick="closeModal('doctorModal')">Cancel</button><button class="btn-primary" style="background:#0284c7" onclick="saveDoctor()">Save doctor</button></div></div></div>
+
+<div id="resultModal" class="modal hidden"><div class="modal-card text-center" style="max-width:26rem">
+  <div class="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-2xl mx-auto mb-3">✓</div>
+  <h3 class="text-lg font-semibold mb-1">Sample registered</h3>
+  <p id="resultMsg" class="text-sm text-slate-500 mb-4"></p>
+  <div class="flex gap-2 justify-center"><button class="btn-ghost" onclick="closeModal('resultModal');go('specialty')">View samples</button><button class="btn-primary" style="background:#0284c7" onclick="resetWizard()">Register another</button></div></div></div>
+
+<div id="catalogModal" class="modal hidden"><div class="modal-card flex flex-col" style="max-width:42rem;max-height:90vh;padding:0">
+  <div class="flex items-center justify-between gap-3 px-5 py-4 border-b border-slate-100 shrink-0">
+    <div class="flex items-center gap-3 min-w-0">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-400 to-teal-400 text-white flex items-center justify-center shadow-sm shrink-0"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 9h-6L8 4z"/></svg></div>
+      <div class="min-w-0"><h3 class="text-base font-semibold text-slate-800">Test catalog</h3><p class="text-xs text-slate-500">Browse and select tests with checkboxes</p></div>
+    </div>
+    <button type="button" class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-slate-500 hover:bg-slate-100 transition shrink-0" onclick="closeModal('catalogModal')" aria-label="Close catalog">✕</button>
+  </div>
+  <div class="px-5 py-3 border-b border-slate-100 bg-slate-50/60 shrink-0">
+    <input id="catalogSearch" class="inp" placeholder="Search by name, code or family…" oninput="renderCatalogList()" />
+    <div id="catalogMeta" class="mt-2 flex items-center justify-between text-xs text-slate-500"></div>
+  </div>
+  <div id="catalogList" class="flex-1 overflow-y-auto px-5 py-3 scroll-thin min-h-0"></div>
+  <div class="px-5 py-4 border-t border-slate-100 flex justify-end shrink-0"><button class="btn-primary" style="background:#0284c7" onclick="closeModal('catalogModal')">Done</button></div>
+</div></div>
+
+<script>
+/* ===================== icons ===================== */
+const ICON = {
+  plus:'M12 4v16m8-8H4',
+  report:'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
+  clip:'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2',
+  track:'M9 11H5a2 2 0 00-2 2v7a1 1 0 001 1h16a1 1 0 001-1v-7a2 2 0 00-2-2h-4M9 11V7a3 3 0 116 0v4M9 11h6',
+  ticket:'M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z',
+  support:'M18.364 5.636A9 9 0 015.636 18.364 9 9 0 0118.364 5.636zM12 8v4l3 2',
+  flask:'M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 9h-6L8 4z',
+  clock:'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z',
+  warn:'M12 9v2m0 4h.01M5 19h14a2 2 0 001.85-2.75L13.85 4.21a2 2 0 00-3.7 0L3.15 16.25A2 2 0 005 19z',
+  chat:'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z',
+};
+function svg(path,cls){return `<svg class="${cls||'w-6 h-6'}" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${path}"/></svg>`;}
+const TILE = {
+  sky:{card:'from-sky-50 to-white',icon:'from-sky-400 to-sky-500'},
+  lavender:{card:'from-fuchsia-50 to-white',icon:'from-fuchsia-400 to-pink-500'},
+  teal:{card:'from-teal-50 to-white',icon:'from-teal-400 to-emerald-500'},
+  forest:{card:'from-emerald-50 to-white',icon:'from-emerald-400 to-green-500'},
+  sunshine:{card:'from-amber-50 to-white',icon:'from-amber-400 to-orange-400'},
+  coral:{card:'from-orange-50 to-white',icon:'from-orange-400 to-rose-400'},
+};
+const DASH_QUICK_ACTIONS = [
+  {nav:'register',accent:'sky',icon:'plus',eyebrow:'New',t:'Register a sample',dt:'Register New Sample',d:'Submit a new sample for one of your patients.'},
+  {nav:'specialty',accent:'lavender',icon:'report',eyebrow:'Reports',t:'Samples',dt:'Samples',d:"View and download your patients' test reports."},
+];
+const DASH_SUPPORT_ACTIONS = [
+  {nav:'tickets',accent:'sunshine',icon:'ticket',eyebrow:'Support',t:'Tickets',dt:'Tickets',d:'Open a ticket or follow up on an existing one.'},
+  {nav:'chat',accent:'teal',icon:'chat',eyebrow:'Chat',t:'Chat',dt:'Chat',d:'Message our team in real time.'},
+];
+const QUICK_ACCESS_ACTIONS = [...DASH_QUICK_ACTIONS, ...DASH_SUPPORT_ACTIONS];
+function renderDashTiles(items,mountId){
+  document.getElementById(mountId).innerHTML = items.map(a=>{const s=TILE[a.accent];
+    return `<div onclick="go('${a.nav}')" class="group cursor-pointer relative overflow-hidden rounded-3xl border border-white/60 bg-gradient-to-br ${s.card} p-6 shadow-[0_2px_12px_-4px_rgba(15,23,42,0.08)] hover:shadow-[0_8px_24px_-6px_rgba(15,23,42,0.18)] transition hover:-translate-y-0.5">
+      <div class="flex items-center justify-between"><div class="w-14 h-14 rounded-2xl flex items-center justify-center text-white shadow-sm bg-gradient-to-br ${s.icon}">${svg(ICON[a.icon],'w-7 h-7')}</div></div>
+      <h3 class="mt-5 text-lg font-semibold text-slate-800">${a.dt||a.t}</h3>
+      <p class="mt-1 text-sm text-slate-500">${a.d}</p></div>`;}).join('');
+}
+
+/* ===================== mock data ===================== */
+let patients = [
+  { value: 21273, label: "john", mrn: "21273", dob: "1991-03-04", gender: "Male", email: "john@example.com" },
+  { value: 21203, label: "Inshera", mrn: "21203", dob: "1996-08-19", gender: "Female", email: "inshera@example.com" },
+  { value: 21174, label: "kashif", mrn: "21174", dob: "1988-01-22", gender: "Male", email: "kashif@example.com" },
+  { value: 21199, label: "asif Taj", mrn: "21199", dob: "1990-12-02", gender: "Male", email: "asif@example.com" },
+];
+let doctors = [ { value: 9001, label: "Dr. Lena Hoffman", speciality: "Oncology" }, { value: 9002, label: "Dr. Omar Said", speciality: "Genetics" } ];
+const FAMILIES = ["All", "Branded", "Packages"];
+const CATALOG = [
+  {id:768,name:"NIPTune® C",code:"NTC",family:"NIPTune",category:"branded",trf:true},{id:769,name:"NIPTune® S",code:"NTS",family:"NIPTune",category:"branded",trf:true},{id:1231,name:"NIPTune® X+",code:"NTX",family:"NIPTune",category:"branded",trf:true},
+  {id:775,name:"OncoSeq® C",code:"OSC",family:"OncoSeq",category:"branded",trf:true},{id:776,name:"OncoSeq® S",code:"OSS",family:"OncoSeq",category:"branded",trf:true},
+  {id:739,name:"ExoSeq® Comp",code:"EXC",family:"ExoSeq",category:"branded",trf:true},{id:744,name:"ExoSeq® Fertility F",code:"EXFF",family:"ExoSeq",category:"branded",trf:true},{id:745,name:"ExoSeq® Fertility M",code:"EXFM",family:"ExoSeq",category:"branded",trf:true},
+  {id:792,name:"WholeSeq™",code:"WS",family:"WholeSeq",category:"branded",trf:true},
+  {id:835,name:"Eatwellgx",code:"EWG",family:"Livewell",category:"branded",trf:false},{id:836,name:"Fitwellgx",code:"FWG",family:"Livewell",category:"branded",trf:false},
+  {id:1226,name:"Functional Chex®",code:"FNC",family:"Chex",category:"branded",trf:false},{id:832,name:"Age Chex®",code:"AGC",family:"Chex",category:"branded",trf:false},{id:947,name:"Food Intolerance Test",code:"FIT",family:"Chex",category:"branded",trf:false},
+];
+const PACKAGES = [
+  {id:9001,name:"Women's Health Panel",code:"WHP",description:"NIPT and fertility screening bundle for women's health.",tests:[769,744]},
+  {id:9002,name:"Oncology Screening Bundle",code:"OSB",description:"Comprehensive oncology and whole-genome screening.",tests:[775,792]},
+  {id:9003,name:"Wellness Essentials",code:"WEL",description:"Lifestyle genetics and wellness biomarker panel.",tests:[835,832,1226]},
+];
+function catalogById(id){ return CATALOG.find(t=>t.id===id); }
+function packageTests(pkg){ return (pkg.tests||[]).map(catalogById).filter(Boolean); }
+const BRAND_FAMILIES=[...new Set(CATALOG.filter(t=>t.category==='branded').map(t=>t.family))];
+let activeBrandFamily=null;
+/* specialty report rows */
+const SPECIALTY = [
+  {patient:"john",mrn:"21273",test:"ExoSeq® Comp",addon:true,reg:"—",barcode:"",status:"Sample Collected"},
+  {patient:"john",mrn:"21273",test:"ExoSeq® Cardio",addon:false,reg:"—",barcode:"",status:"Sample Collected"},
+  {patient:"Inshera",mrn:"21203",test:"ExoSeq® CS",addon:true,reg:"2026-05-22",barcode:"26052210054893",status:"Sample Collected"},
+  {patient:"Constance Trevino",mrn:"Sed obcaecati simili",test:"Food Intolerance Test",addon:false,reg:"2026-05-21",barcode:"26052113453219",status:"Report Released"},
+  {patient:"Hammett Golden",mrn:"Eu aut labore aut ex",test:"Age Chex®",addon:false,reg:"2026-05-21",barcode:"26052111530177",status:"Report Released"},
+  {patient:"Inshera",mrn:"21203",test:"ExoSeq® CS",addon:false,reg:"—",barcode:"",status:"Sample Collected"},
+  {patient:"kashif",mrn:"21174",test:"ExoSeq® Fertility M",addon:false,reg:"—",barcode:"",status:"Sample Collected"},
+  {patient:"asif Taj",mrn:"21199",test:"ExoSeq® Fertility F",addon:false,reg:"—",barcode:"",status:"Sample Collected"},
+  {patient:"kashif",mrn:"21174",test:"NIPTune® X+",addon:false,reg:"—",barcode:"",status:"Sample Collected"},
+  {patient:"kashif",mrn:"21174",test:"NIPTune® S",addon:false,reg:"—",barcode:"",status:"Sample Collected"},
+];
+
+function initials(n){return (n||'').split(' ').filter(Boolean).slice(0,2).map(s=>s[0]?.toUpperCase()||'').join('')||'?';}
+function statusBadge(s){const x=(s||'').toLowerCase();
+  if(x.includes('released')||x.includes('close'))return 'bg-emerald-100 text-emerald-700';
+  if(x.includes('reject'))return 'bg-rose-100 text-rose-700';
+  if(x.includes('collect')||x.includes('pre-register')||x.includes('pending'))return 'bg-sky-100 text-sky-700';
+  if(x.includes('progress')||x==='open')return 'bg-amber-100 text-amber-700';
+  return 'bg-teal-100 text-teal-700';}
+
+/* ===================== router ===================== */
+const SIMPLE = {track:'Track Order',tickets:'Support Tickets',support:'Customer Support',chat:'Chat',staff:'Add staff',
+  users:'Users',roles:'Roles',privacy:'Privacy',password:'Password reset',disable:'Disable users'};
+function go(view){
+  let realView = SIMPLE[view] ? 'simple' : view;
+  document.querySelectorAll('section[data-view]').forEach(s=>s.classList.toggle('hidden', s.dataset.view!==realView));
+  // sidebar active — quick-access tiles (register/track/support) highlight Quick Access; everything else highlights itself
+  const navMap = {register:'quick',tickets:'quick',chat:'quick'};
+  document.querySelectorAll('[data-nav]').forEach(n=>n.classList.toggle('side-active', n.dataset.nav===(navMap[view]||view)));
+  // title + back button
+  const titles={dashboard:'Dashboard',quick:'Quick Access',specialty:'Samples',register:'Register Sample',chat:'Chat',staff:'Add staff'};
+  document.getElementById('pageTitle').textContent = SIMPLE[view] || titles[view] || view;
+  document.getElementById('backBtnTop').classList.toggle('hidden', view==='dashboard');
+  document.getElementById('backBtnTop').classList.toggle('flex', view!=='dashboard');
+  if(view==='specialty') renderList('specialtyMount','Samples',SPECIALTY,166);
+  if(SIMPLE[view]) document.getElementById('simpleTitle').textContent = SIMPLE[view];
+  window.scrollTo(0,0);
+}
+document.querySelectorAll('[data-nav]').forEach(n=>n.addEventListener('click',()=>go(n.dataset.nav)));
+
+/* ===================== dashboard render ===================== */
+function renderDashboard(){
+  renderDashTiles(DASH_QUICK_ACTIONS,'dashActions');
+  renderDashTiles(DASH_SUPPORT_ACTIONS,'dashSupport');
+  const stats=[
+    {l:'Samples',v:'166',sub:'7 this month',c:'bg-teal-100 text-teal-600',i:'flask'},
+    {l:'In progress',v:'188',sub:'Awaiting results',c:'bg-amber-100 text-amber-600',i:'clock'},
+    {l:'Overdue',v:'0',sub:'Past expected turnaround',c:'bg-rose-100 text-rose-600',i:'warn'},
+  ];
+  document.getElementById('dashStats').innerHTML = stats.map(s=>`<div class="rounded-2xl bg-white border border-slate-100 p-5 flex items-center gap-4"><div class="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${s.c}">${svg(ICON[s.i],'w-5 h-5')}</div><div><p class="text-xs uppercase tracking-wide text-slate-500 font-medium">${s.l}</p><p class="mt-0.5 text-2xl font-semibold text-slate-800">${s.v}</p><p class="text-xs text-slate-500 mt-0.5">${s.sub}</p></div></div>`).join('');
+  const latest=SPECIALTY.slice(0,5).map(r=>({name:r.patient,bc:r.barcode||'—',test:r.test,status:r.status,date:r.reg==='—'?'May 22, 2026':r.reg}));
+  document.getElementById('dashLatest').innerHTML = latest.map(s=>`<li class="flex items-center gap-4 px-5 py-3.5 hover:bg-slate-50 transition">
+    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-sky-100 to-teal-100 text-sky-700 text-sm font-semibold flex items-center justify-center shrink-0">${initials(s.name)}</div>
+    <div class="flex-1 min-w-0 grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-4">
+      <div class="min-w-0"><div class="text-sm font-medium text-slate-800 truncate">${s.name}</div><div class="text-xs text-slate-500">${s.bc}</div></div>
+      <div class="text-sm text-slate-600 truncate">${s.test}</div>
+      <div class="flex items-center justify-between sm:justify-end gap-3"><span class="badge ${statusBadge(s.status)}">${s.status}</span><span class="text-xs text-slate-500 whitespace-nowrap">${s.date}</span></div>
+    </div></li>`).join('');
+}
+
+/* ===================== quick access render ===================== */
+function renderQuick(){
+  document.getElementById('quickTiles').innerHTML = QUICK_ACCESS_ACTIONS.map(a=>{const s=TILE[a.accent];
+    return `<div onclick="go('${a.nav}')" class="group cursor-pointer relative overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-br ${s.card} p-5 shadow-sm hover:shadow-md transition hover:-translate-y-0.5 flex items-start gap-4">
+      <div class="w-14 h-14 rounded-xl flex items-center justify-center shrink-0 shadow-sm text-white bg-gradient-to-br ${s.icon}">${svg(ICON[a.icon],'w-6 h-6')}</div>
+      <div class="min-w-0 flex-1"><p class="text-[10px] font-semibold uppercase tracking-wider text-slate-400">${a.eyebrow}</p><h3 class="mt-1 text-[15px] font-semibold text-slate-800 truncate">${a.t}</h3><p class="mt-1 text-xs text-slate-500 leading-snug">${a.d}</p></div>
+    </div>`;}).join('');
+}
+
+/* ===================== list render (specialty / routine) ===================== */
+function renderList(mountId,title,rows,total){
+  const m=document.getElementById(mountId);
+  m.innerHTML = `
+    <div class="flex items-center gap-3 mb-5">
+      <div class="w-12 h-12 rounded-xl bg-violet-100 text-violet-600 flex items-center justify-center">${svg(ICON.report,'w-6 h-6')}</div>
+      <div><h1 class="text-2xl font-bold text-slate-800">${title}</h1><p class="text-sm text-slate-500">${total} tests</p></div>
+    </div>
+    <div class="rounded-2xl border border-slate-200 bg-white shadow-sm p-4 mb-4">
+      <div class="flex gap-3 flex-col sm:flex-row">
+        <div class="relative flex-1"><span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">${svg('M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z','w-4 h-4')}</span><input class="inp pl-9" placeholder="Search patient, MRN, barcode, collection, test..."></div>
+        <input class="inp sm:w-64" placeholder="YYYY-MM-DD ~ YYYY-MM-DD">
+        <button class="btn-primary inline-flex items-center gap-2"><span>Search</span></button>
+      </div>
+      <div class="flex gap-2 mt-3 flex-wrap">
+        <button class="px-3 py-2 rounded-lg text-sm font-medium bg-amber-50 text-amber-700 border border-amber-200">Status: All Statuses ▾</button>
+        <button class="btn-ghost inline-flex items-center gap-2">Group by Patient</button>
+        <button class="btn-ghost inline-flex items-center gap-2">Group by Collection</button>
+      </div>
+    </div>
+    <div class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+      <table class="w-full text-sm">
+        <thead><tr class="text-left text-[11px] uppercase tracking-wider text-slate-400 border-b border-slate-200">
+          <th class="py-3 px-5">Patient</th><th>Test</th><th>Add-on</th><th>Registered</th><th>Status</th><th class="px-5">Actions</th></tr></thead>
+        <tbody>${rows.map(r=>`<tr class="border-b border-slate-100 hover:bg-slate-50">
+          <td class="py-3 px-5"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-sky-50 text-sky-700 text-xs font-semibold flex items-center justify-center shrink-0">${initials(r.patient)}</div><div><div class="font-medium text-slate-800">${r.patient}</div><div class="text-[11px] text-slate-400">MRN: ${r.mrn}</div></div></div></td>
+          <td><div class="text-slate-700">${r.test}</div>${r.barcode?`<div class="text-[11px] text-slate-400">${r.barcode}</div>`:''}</td>
+          <td>${r.addon?'<span class="badge bg-emerald-100 text-emerald-700">Yes</span>':'<span class="text-slate-300">—</span>'}</td>
+          <td class="text-slate-600">${r.reg}</td>
+          <td><span class="badge ${statusBadge(r.status)}">${r.status}</span></td>
+          <td class="px-5 text-slate-400 text-lg">⋯</td></tr>`).join('')}</tbody>
+      </table>
+    </div>
+    <div class="flex items-center justify-between mt-4 text-sm">
+      <span class="text-slate-500">Showing <b>1-${rows.length}</b> of <b>${total}</b></span>
+      <div class="flex gap-1">${[1,2,3,4,5,'…',Math.ceil(total/10)].map((p,i)=>`<button class="w-9 h-9 rounded-lg text-sm ${i===0?'bg-violet-600 text-white':'border border-slate-200 text-slate-600 hover:bg-slate-50'}">${p}</button>`).join('')}</div>
+    </div>`;
+}
+
+/* ===================== registration wizard ===================== */
+const state = { step:1, physical:true, patientId:"", doctorId:"", selected:{}, selectedPackage:null, trfMode:{}, trfFile:{} };
+const STEP_LABELS=[{n:1,l:"Sample details"},{n:2,l:"Patient details"},{n:3,l:"Tests"}];
+function activeTrfTests(){ return Object.values(state.selected).filter(t=>t.trf); }
+function renderStepper(){
+  const cur = state.step==='trf'?3:state.step;
+  document.getElementById('stepper').innerHTML = STEP_LABELS.map((s,i)=>{
+    const done=s.n<cur||state.step==='trf', active=s.n===cur&&state.step!=='trf';
+    return `<div class="flex items-center gap-2"><div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${done?'bg-emerald-500 text-white':active?'bg-violet-600 text-white':'bg-slate-200 text-slate-500'}">${done?'✓':s.n}</div><span class="${active||done?'font-semibold text-slate-900':'text-slate-500'}">${s.l}</span></div>${i<STEP_LABELS.length-1?'<div class="h-px flex-1 bg-slate-200"></div>':''}`;
+  }).join('') + (state.step==='trf'?'<div class="h-px flex-1 bg-slate-200"></div><div class="flex items-center gap-2"><div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold bg-amber-500 text-white">!</div><span class="font-semibold text-slate-900">TRF</span></div>':'');
+  document.querySelectorAll('[data-step]').forEach(s=>s.classList.toggle('hidden', String(s.dataset.step)!==String(state.step)));
+  document.getElementById('wBackBtn').style.visibility = state.step===1?'hidden':'visible';
+  const n=document.getElementById('wNextBtn');
+  if(state.step===3){ n.textContent=activeTrfTests().length?'Submit & continue to TRF':'Submit sample'; n.style.background='#059669'; }
+  else if(state.step==='trf'){ n.textContent='Submit TRF & finish'; n.style.background='#059669'; }
+  else { n.textContent='Continue'; n.style.background=''; }
+}
+function wNext(){
+  if(state.step===1){ if(!document.getElementById('sampleType').value) return alert('Select a sample type'); state.step=2; }
+  else if(state.step===2){ if(!state.patientId) return alert('Select or add a patient'); state.step=3; }
+  else if(state.step===3){ if(!Object.keys(state.selected).length) return alert('Select at least one test'); if(activeTrfTests().length){ state.step='trf'; renderTrf(); } else return submitSample(); }
+  else if(state.step==='trf'){ return submitSample(); }
+  renderStepper();
+}
+function wBack(){ if(state.step==='trf') state.step=3; else if(state.step>1) state.step--; renderStepper(); }
+function setPhysical(v){ state.physical=v;
+  document.getElementById('physYes').className='flex-1 px-3 py-2 rounded-lg border text-sm font-medium '+(v?'border-sky-500 bg-sky-50 text-sky-700':'border-slate-200 text-slate-600');
+  document.getElementById('physNo').className='flex-1 px-3 py-2 rounded-lg border text-sm font-medium '+(!v?'border-sky-500 bg-sky-50 text-sky-700':'border-slate-200 text-slate-600'); }
+function mockScan(){ document.getElementById('barcode').value="BC-"+Math.floor(100000+Math.random()*900000); }
+function filterPatients(q){const box=document.getElementById('patientResults');q=q.trim().toLowerCase();
+  if(!q){box.classList.add('hidden');box.innerHTML='';return;}
+  const m=patients.filter(p=>[p.label,p.mrn,p.dob,p.email].join(' ').toLowerCase().includes(q));
+  box.innerHTML=m.length?m.map(p=>`<button class="w-full text-left px-3 py-2 hover:bg-slate-50 border-b border-slate-100 last:border-0" onclick="choosePatient(${p.value})"><div class="text-sm font-medium">${p.label}</div><div class="text-[11px] text-slate-500">MRN ${p.mrn} · DOB ${p.dob} · ${p.email}</div></button>`).join(''):`<div class="px-3 py-3 text-sm text-slate-500">No match. Use “Add new patient”.</div>`;
+  box.classList.remove('hidden');}
+function choosePatient(id){const p=patients.find(x=>x.value===id);if(!p)return;state.patientId=id;
+  document.getElementById('patientSearch').classList.add('hidden');document.getElementById('patientResults').classList.add('hidden');
+  document.getElementById('patientChosen').classList.remove('hidden');document.getElementById('pcName').textContent=p.label;document.getElementById('pcMeta').textContent=`· MRN ${p.mrn} · DOB ${p.dob}`;
+  document.getElementById('dob').value=p.dob||'';document.getElementById('gender').value=p.gender||'';}
+function clearPatient(){state.patientId="";document.getElementById('patientChosen').classList.add('hidden');const s=document.getElementById('patientSearch');s.classList.remove('hidden');s.value='';}
+function renderDoctors(){const sel=document.getElementById('doctor');sel.innerHTML=`<option value="">None</option>`+doctors.map(d=>`<option value="${d.value}">${d.label} — ${d.speciality||''}</option>`).join('');sel.value=state.doctorId||"";}
+let activeFamily="All";
+function allTestSearchQuery(){ return (document.getElementById('allTestSearch').value||'').trim().toLowerCase(); }
+function testSearchQuery(){ return (document.getElementById('testSearch').value||'').trim().toLowerCase(); }
+function catalogSearchQuery(){ return (document.getElementById('catalogSearch')?.value||'').trim().toLowerCase(); }
+function matchesTestSearch(t,q){ return !q || (t.name+t.code+t.family).toLowerCase().includes(q); }
+function filterAllTests(q){ return CATALOG.filter(t=>matchesTestSearch(t,q)); }
+function filterCatalogTests(q){ return CATALOG.filter(t=>matchesTestSearch(t,q)); }
+function matchesPackageSearch(p,q){ return !q || (p.name+p.code+p.description+packageTests(p).map(t=>t.name).join(' ')).toLowerCase().includes(q); }
+function visibleBrandedTests(){ if(!activeBrandFamily) return []; const q=testSearchQuery(); return CATALOG.filter(t=>t.category==='branded'&&t.family===activeBrandFamily&&matchesTestSearch(t,q)); }
+function visiblePackages(){ const q=testSearchQuery(); return PACKAGES.filter(p=>matchesPackageSearch(p,q)); }
+function hideAllTestResults(){ const box=document.getElementById('allTestResults'); if(box) box.classList.add('hidden'); }
+function filterAllTestsInput(q){
+  const box=document.getElementById('allTestResults'); q=(q||'').trim().toLowerCase();
+  if(!q){ box.classList.add('hidden'); box.innerHTML=''; return; }
+  const m=filterAllTests(q);
+  box.innerHTML=m.length?m.map(t=>{ const sel=!!state.selected[t.id]&&!state.selectedPackage;
+    return `<button type="button" class="w-full text-left px-3 py-2.5 hover:bg-slate-50 border-b border-slate-100 last:border-0 flex items-start gap-2" onclick="pickAllTest(${t.id})"><span class="flex items-center justify-center w-4 h-4 rounded border shrink-0 mt-0.5 ${sel?'border-sky-500 bg-sky-500 text-white text-[10px]':'border-slate-300 text-transparent'}">✓</span><div class="min-w-0"><div class="text-sm font-medium">${t.name}</div><div class="text-[11px] text-slate-500">${t.code} · ${t.family}${t.trf?' · TRF':''}</div></div></button>`;
+  }).join(''):`<div class="px-3 py-3 text-sm text-slate-500">No tests match your search.</div>`;
+  box.classList.remove('hidden');
+}
+function pickAllTest(id){ toggleTest(id); filterAllTestsInput(document.getElementById('allTestSearch').value); }
+function openCatalogModal(){ document.getElementById('catalogSearch').value=''; renderCatalogList(); openModal('catalogModal'); }
+function renderCatalogList(){
+  const q=catalogSearchQuery(), items=filterCatalogTests(q), selCount=Object.keys(state.selected).length;
+  document.getElementById('catalogMeta').innerHTML=`<span>Showing <b>${items.length}</b> of ${CATALOG.length} tests</span><span><b class="text-sky-700">${selCount}</b> selected</span>`;
+  document.getElementById('catalogList').innerHTML=items.length?items.map(t=>{ const sel=!!state.selected[t.id]&&!state.selectedPackage;
+    return `<label class="flex items-start gap-3 rounded-xl border p-3 mb-2 cursor-pointer ${sel?'border-sky-500 bg-sky-50/60':'border-slate-200 hover:border-sky-300 bg-white'}"><input type="checkbox" class="mt-1 w-4 h-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" ${sel?'checked':''} onchange="toggleCatalogCheckbox(${t.id},this.checked)" /><div class="min-w-0 flex-1"><div class="flex items-center gap-2 flex-wrap"><span class="text-sm font-semibold text-slate-800">${t.name}</span><span class="text-[11px] font-mono px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">${t.code}</span></div><div class="flex items-center gap-2 mt-1 flex-wrap"><span class="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-violet-100 text-violet-700">${t.family}</span>${t.trf?'<span class="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700">TRF</span>':''}</div></div></label>`;
+  }).join(''):`<div class="py-10 text-center text-sm text-slate-500">No tests match your search.</div>`;
+}
+function toggleCatalogCheckbox(id,checked){
+  const isSel=!!state.selected[id];
+  if(checked&&!isSel) toggleTest(id);
+  else if(!checked&&isSel) toggleTest(id);
+  renderCatalogList();
+  filterAllTestsInput(document.getElementById('allTestSearch').value);
+}
+function renderTestCard(t){ const sel=!!state.selected[t.id]&&!state.selectedPackage;
+  return `<button onclick="toggleTest(${t.id})" class="text-left rounded-xl border p-3 flex items-start gap-3 ${sel?'border-sky-500 bg-sky-50 shadow-sm':'border-slate-200 hover:border-sky-300 bg-white'}"><span class="flex items-center justify-center w-5 h-5 rounded-md border shrink-0 mt-0.5 ${sel?'border-sky-500 bg-sky-500 text-white':'border-slate-300 text-transparent'}">✓</span><div class="min-w-0 flex-1"><div class="text-sm font-medium truncate">${t.name}</div><div class="flex items-center gap-2 mt-0.5 flex-wrap"><span class="text-[11px] text-slate-500">${t.code}</span><span class="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-violet-100 text-violet-700">${t.family}</span>${t.trf?'<span class="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700">TRF</span>':''}</div></div></button>`; }
+function renderPackageCard(p){ const sel=state.selectedPackage===p.id; const tests=packageTests(p); const trfCount=tests.filter(t=>t.trf).length;
+  return `<button onclick="selectPackage(${p.id})" class="text-left rounded-xl border p-3 flex items-start gap-3 ${sel?'border-sky-500 bg-sky-50 shadow-sm':'border-slate-200 hover:border-sky-300 bg-white'}"><span class="flex items-center justify-center w-5 h-5 rounded-md border shrink-0 mt-0.5 ${sel?'border-sky-500 bg-sky-500 text-white':'border-slate-300 text-transparent'}">✓</span><div class="min-w-0 flex-1"><div class="text-sm font-medium truncate">${p.name}</div><div class="flex items-center gap-2 mt-0.5 flex-wrap"><span class="text-[11px] text-slate-500">${p.code}</span><span class="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-indigo-100 text-indigo-700">${tests.length} test${tests.length===1?'':'s'}</span>${trfCount?`<span class="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700">${trfCount} TRF</span>`:''}</div><p class="text-[11px] text-slate-500 mt-1 line-clamp-2">${p.description}</p><p class="text-[10px] text-slate-400 mt-1 truncate">${tests.map(t=>t.name).join(' · ')}</p></div></button>`; }
+function renderFamilies(){document.getElementById('familyChips').innerHTML=FAMILIES.map(f=>`<button onclick="selectMainFamily('${f}')" class="px-3 py-1.5 rounded-full text-xs font-medium border ${activeFamily===f?'border-sky-500 bg-sky-50 text-sky-700':'border-slate-200 text-slate-600 hover:border-sky-300'}">${f}</button>`).join('');}
+function selectMainFamily(f){ activeFamily=f; activeBrandFamily=null; const ts=document.getElementById('testSearch'); if(ts) ts.value=''; renderFamilies(); renderBrandFamilies(); renderTests(); }
+function renderBrandFamilies(){
+  const picker=document.getElementById('brandFamilyPicker');
+  const chips=document.getElementById('brandFamilyChips');
+  if(activeFamily!=='Branded'){ picker.classList.add('hidden'); return; }
+  picker.classList.remove('hidden');
+  chips.innerHTML=BRAND_FAMILIES.map(f=>`<button type="button" onclick="selectBrandFamily('${f}')" class="px-3 py-1.5 rounded-full text-xs font-medium border ${activeBrandFamily===f?'border-violet-500 bg-violet-50 text-violet-700':'border-slate-200 text-slate-600 hover:border-violet-300'}">${f}</button>`).join('');
+}
+function selectBrandFamily(family){ activeBrandFamily=family; const ts=document.getElementById('testSearch'); if(ts) ts.value=''; renderBrandFamilies(); renderTests(); }
+function renderTests(){
+  const isAll=activeFamily==='All', isBranded=activeFamily==='Branded', isPackages=activeFamily==='Packages';
+  const showBrandedTests=isBranded&&!!activeBrandFamily;
+  document.getElementById('allTestPicker').classList.toggle('hidden',!isAll);
+  renderBrandFamilies();
+  document.getElementById('testSearch').classList.toggle('hidden',isAll||isBranded&&!activeBrandFamily);
+  document.getElementById('testGrid').classList.toggle('hidden',isAll||isBranded&&!activeBrandFamily);
+  if(isAll){ hideAllTestResults(); return; }
+  if(isBranded&&!activeBrandFamily) return;
+  const grid=document.getElementById('testGrid');
+  grid.classList.remove('hidden');
+  if(isBranded){ grid.innerHTML=visibleBrandedTests().map(renderTestCard).join('')||'<p class="text-sm text-slate-500 col-span-full">No tests match your search.</p>'; return; }
+  if(isPackages){ grid.innerHTML=visiblePackages().map(renderPackageCard).join('')||'<p class="text-sm text-slate-500 col-span-full">No packages match your search.</p>'; return; }
+}
+function clearPackage(){ state.selectedPackage=null; state.selected={}; }
+function selectPackage(pkgId){
+  const pkg=PACKAGES.find(p=>p.id===pkgId); if(!pkg) return;
+  if(state.selectedPackage===pkgId){ clearPackage(); }
+  else {
+    state.selectedPackage=pkgId; state.selected={};
+    packageTests(pkg).forEach(t=>{ state.selected[t.id]=t; });
+  }
+  renderTests(); renderSelected(); updateTrfNote();
+}
+function toggleTest(id){
+  if(state.selectedPackage) clearPackage();
+  if(state.selected[id]) delete state.selected[id];
+  else state.selected[id]=catalogById(id);
+  renderTests(); renderSelected(); updateTrfNote();
+  if(!document.getElementById('catalogModal').classList.contains('hidden')) renderCatalogList();
+}
+function updateTrfNote(){const n=activeTrfTests().length;document.getElementById('trfNote').textContent=n>0?`${n} TRF${n>1?'s':''} will be requested after submit.`:'';renderStepper();}
+function renderSelected(){
+  const ids=Object.keys(state.selected);
+  document.getElementById('selectedWrap').classList.toggle('hidden',!ids.length);
+  document.getElementById('selCount').textContent=ids.length;
+  let html='';
+  if(state.selectedPackage){
+    const pkg=PACKAGES.find(p=>p.id===state.selectedPackage);
+    html+=`<div class="flex items-center justify-between px-4 py-2.5 text-sm bg-sky-50/60 border-b border-slate-100"><span class="font-semibold text-sky-900">${pkg?pkg.name:'Package'} <span class="text-xs font-normal text-slate-500">· ${ids.length} test${ids.length===1?'':'s'}</span></span><button class="text-xs text-slate-500 hover:text-rose-500" onclick="clearPackage();renderTests();renderSelected();updateTrfNote();">Remove package</button></div>`;
+    html+=ids.map(id=>{const t=state.selected[id];return `<div class="flex items-center justify-between px-4 py-2 pl-8 text-sm text-slate-600"><span>${t.name}${t.trf?' <span class="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700">TRF</span>':''}</span></div>`;}).join('');
+  } else {
+    html=ids.map(id=>{const t=state.selected[id];return `<div class="flex items-center justify-between px-4 py-2.5 text-sm"><span class="font-medium">${t.name}${t.trf?' <span class="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700">TRF</span>':''}</span><button class="text-xs text-slate-400 hover:text-rose-500" onclick="toggleTest(${id})">Remove</button></div>`;}).join('');
+  }
+  document.getElementById('selectedList').innerHTML=html;
+}
+function renderTrf(){const tests=activeTrfTests();
+  document.getElementById('trfBody').innerHTML=`<div class="rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-xs px-3 py-2 mb-4">⚠ Manual / uploaded TRFs may delay turnaround time. The short electronic form is recommended.</div>`+
+    tests.map(t=>{const mode=state.trfMode[t.id]||'form';
+      return `<div class="border border-slate-200 rounded-xl p-4 mb-3"><div class="flex items-center justify-between mb-3"><div class="text-sm font-semibold">${t.name} — TRF</div><div class="flex gap-1 text-xs"><button class="px-2.5 py-1 rounded-full border ${mode==='form'?'border-sky-500 bg-sky-50 text-sky-700':'border-slate-200 text-slate-600'}" onclick="setTrfMode(${t.id},'form')">Electronic form</button><button class="px-2.5 py-1 rounded-full border ${mode==='upload'?'border-sky-500 bg-sky-50 text-sky-700':'border-slate-200 text-slate-600'}" onclick="setTrfMode(${t.id},'upload')">Upload PDF</button></div></div>
+        ${mode==='form'?`<div class="grid grid-cols-1 sm:grid-cols-2 gap-3"><div><label class="lbl">Collection date</label><input type="date" class="inp"></div><div><label class="lbl">Sample type</label><input class="inp" value="${document.getElementById('sampleType').value||''}" readonly></div><div class="sm:col-span-2"><label class="lbl">Clinical notes</label><textarea class="inp" rows="2"></textarea></div></div>`
+        :`<label class="flex items-center justify-center gap-2 border-2 border-dashed border-slate-300 rounded-lg py-6 text-sm text-slate-500 cursor-pointer hover:border-sky-400">${state.trfFile[t.id]?('📄 '+state.trfFile[t.id]):'＋ Upload signed TRF (PDF)'}<input type="file" accept="application/pdf" class="hidden" onchange="if(this.files[0]){state.trfFile[${t.id}]=this.files[0].name;renderTrf();}"></label>`}</div>`;}).join('');}
+function setTrfMode(id,m){state.trfMode[id]=m;renderTrf();}
+function openModal(id){closeAllModals();document.getElementById(id).classList.remove('hidden');}
+function closeModal(id){document.getElementById(id).classList.add('hidden');}
+function closeAllModals(){document.querySelectorAll('.modal').forEach(m=>m.classList.add('hidden'));}
+function savePatient(){const name=document.getElementById('np_name').value.trim(),dob=document.getElementById('np_dob').value;if(!name||!dob)return alert('Name and date of birth are required');
+  const p={value:Date.now(),label:name,mrn:document.getElementById('np_mrn').value||'NEW',dob,gender:document.getElementById('np_gender').value,email:document.getElementById('np_email').value};
+  patients.unshift(p);closeModal('patientModal');choosePatient(p.value);['np_name','np_dob','np_gender','np_mrn','np_phone','np_email'].forEach(i=>document.getElementById(i).value='');}
+function saveDoctor(){const name=document.getElementById('nd_name').value.trim();if(!name)return alert('Name is required');
+  const d={value:Date.now(),label:name,speciality:document.getElementById('nd_spec').value};doctors.unshift(d);state.doctorId=d.value;renderDoctors();closeModal('doctorModal');['nd_name','nd_spec','nd_inst'].forEach(i=>document.getElementById(i).value='');}
+function submitSample(){closeAllModals();document.getElementById('resultMsg').textContent="The request is now Registered."+(state.physical?"":" (Report / add-on only — no lab tracking.)");document.getElementById('resultModal').classList.remove('hidden');}
+function resetWizard(){closeAllModals();Object.assign(state,{step:1,physical:true,patientId:"",doctorId:"",selected:{},selectedPackage:null,trfMode:{},trfFile:{}});setPhysical(true);clearPatient();activeFamily="All";activeBrandFamily=null;
+  ['barcode','sampleType','collectionDate','dob','gender','testSearch','allTestSearch','catalogSearch'].forEach(i=>{const el=document.getElementById(i);if(el)el.value='';});
+  hideAllTestResults();
+  renderDoctors();renderFamilies();renderBrandFamilies();renderTests();renderSelected();updateTrfNote();renderStepper();go('register');}
+
+/* ===================== init ===================== */
+const cd=document.getElementById('collectionDate');if(cd)cd.max=new Date().toISOString().slice(0,10);
+renderDashboard();renderQuick();renderDoctors();renderFamilies();renderBrandFamilies();renderTests();renderSelected();renderStepper();
+go('dashboard');
+</script>
+</body>
+</html>
